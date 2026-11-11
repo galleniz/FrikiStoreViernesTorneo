@@ -1,0 +1,3 @@
+﻿"ID","Imagen","código","Rareza","Color"
+"A-001","localhost:5500/a.jpg","rojo","Rara","#FF0000"
+"A-002","localhost:5500/b.jpg","rojo","Comun","#FF0000"

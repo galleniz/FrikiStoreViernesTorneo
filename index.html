@@ -1,0 +1,499 @@
+<!-- <input type="file" id="archivo" accept=".xlsx">
+<script>
+    document.getElementById('archivo').addEventListener('change', async (e) => {
+        const buffer = await e.target.files[0].arrayBuffer();
+        const libro = XLSX.read(buffer);
+        const hoja = libro.Sheets[libro.SheetNames[0]];
+        const filas = XLSX.utils.sheet_to_json(hoja);
+        console.log(filas);
+    });
+</script> -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torneo FrikiStore Viernes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            font-family: "Trebuchet MS", Arial, sans-serif;
+            color: #172033;
+            background: #eef4ff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 48px 24px;
+            background:
+                radial-gradient(circle at 10% 10%, #fff8c7 0 12%, transparent 28%),
+                radial-gradient(circle at 90% 90%, #d4e5ff 0 10%, transparent 30%),
+                linear-gradient(135deg, #f8fbff, #e6efff);
+        }
+
+        body::before {
+            content: "Torneo FrikiStore Viernes";
+            display: block;
+            margin-bottom: 32px;
+            color: #e53935;
+            font-family: "Press Start 2P", "Trebuchet MS", sans-serif;
+            font-size: clamp(1.1rem, 3.3vw, 2.8rem);
+            font-weight: 900;
+            line-height: 1.5;
+            text-align: center;
+            text-shadow: 3px 3px 0 #ffca28, 6px 6px 0 #172033;
+        }
+
+        #papulista {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 18px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0;
+            list-style: none;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto 28px;
+            padding: 18px;
+            border: 3px solid #172033;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 6px 6px 0 #172033;
+        }
+
+        .controls label {
+            font-weight: 700;
+        }
+
+        .controls input,
+        .controls select {
+            min-height: 38px;
+            padding: 8px 10px;
+            border: 2px solid #172033;
+            border-radius: 8px;
+            color: #172033;
+            background: #fff;
+            font: inherit;
+        }
+
+        #buscar-id {
+            min-width: 190px;
+        }
+
+        .card-info img {
+            cursor: zoom-in;
+        }
+
+        #visor {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: none;
+            place-items: center;
+            padding: 24px;
+            background: rgb(23 32 51 / 82%);
+        }
+
+        #visor.abierto {
+            display: grid;
+        }
+
+        .visor-card {
+            --rot-x: 0deg;
+            --rot-y: 0deg;
+            --shine-x: 50%;
+            --shine-y: 50%;
+            position: relative;
+            width: min(75vw, 53.57vh);
+            aspect-ratio: 5 / 7;
+            overflow: hidden;
+            padding: 7px;
+            border: 4px solid #fff;
+            border-radius: 14px;
+            background: #172033;
+            box-shadow: 0 24px 60px rgb(0 0 0 / 55%), 0 0 0 3px #e53935;
+            transform: perspective(1100px) rotateX(var(--rot-x)) rotateY(var(--rot-y));
+            transform-style: preserve-3d;
+            transition: transform .18s ease-out, box-shadow .18s ease-out;
+            will-change: transform;
+        }
+
+        .visor-card::before {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            border-radius: inherit;
+            background:
+                radial-gradient(circle at var(--shine-x) var(--shine-y), rgb(255 255 255 / 62%), transparent 20%),
+                linear-gradient(115deg, transparent 25%, rgb(255 66 190 / 22%), rgb(35 205 255 / 25%), transparent 72%);
+            content: "";
+            mix-blend-mode: screen;
+            opacity: .7;
+            pointer-events: none;
+            transform: translateZ(28px);
+        }
+
+        .visor-card img {
+            position: relative;
+            z-index: 1;
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 7px;
+            transform: translateZ(8px);
+        }
+
+        .visor-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            border: 0;
+            color: #fff;
+            background: transparent;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        #archivo {
+            max-width: 100%;
+        }
+
+        #estado {
+            flex-basis: 100%;
+            margin: 0;
+            color: #4b5870;
+        }
+
+        .color-chip {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            vertical-align: -4px;
+            border: 1px solid #172033;
+            border-radius: 4px;
+        }
+
+        .card {
+            overflow: hidden;
+            border: 5px solid #e53935;
+            border-radius: 14px;
+            background: #ffca28;
+            box-shadow: 5px 5px 0 #172033, inset 0 0 0 3px #fff;
+            content-visibility: auto;
+            contain-intrinsic-size: 0 420px;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .card:hover {
+            transform: translate(-4px, -6px) rotate(-1deg);
+            box-shadow: 12px 14px 0 #e53935;
+        }
+
+        .card>img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 5 / 7;
+            object-fit: cover;
+            background: linear-gradient(135deg, #ffca28, #e53935);
+        }
+
+        .card-info {
+            padding: 16px 18px 18px;
+            background: linear-gradient(180deg, #fff, #f3f7ff 72%, #dbe8ff);
+        }
+
+        .card-info img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 5 / 7;
+            max-height: 260px;
+            margin-bottom: 14px;
+            object-fit: contain;
+            background: #eef4ff;
+        }
+
+        .card-info h3 {
+            margin: 0 0 12px;
+            color: #e53935;
+            font-family: "Press Start 2P", "Trebuchet MS", sans-serif;
+            font-size: .82rem;
+            line-height: 1.6;
+        }
+
+        .card-info p {
+            margin: 7px 0;
+            color: #4b5870;
+            font-size: .92rem;
+        }
+
+        .card-info p::first-line {
+            font-weight: 700;
+            color: #172033;
+        }
+
+        .estado-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border: 2px solid currentColor;
+            border-radius: 999px;
+            font-size: .76rem;
+            font-weight: 800;
+        }
+
+        .estado-baneado {
+            color: #b42318;
+            background: #ffe4e1;
+        }
+
+        .estado-interesante {
+            color: #b75d00;
+            background: #fff0d6;
+        }
+
+        .estado-destacado {
+            color: #806600;
+            background: #fff8c7;
+        }
+
+        .estado-meta {
+            color: #24733b;
+            background: #e0f5e6;
+        }
+
+        .estado-ninguno {
+            color: #64748b;
+            background: #eef2f7;
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding: 28px 16px;
+            }
+
+            body::before {
+                margin-bottom: 24px;
+                text-shadow: 2px 2px 0 #ffca28, 4px 4px 0 #172033;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <section class="controls">
+        <label for="expansion">Expansión:</label>
+        <select id="expansion">
+            <option value="">Todas</option>
+        </select>
+        <label for="rareza">Rareza:</label>
+        <select id="rareza">
+            <option value="">Todas</option>
+        </select>
+        <label for="estado-filtro">Estado:</label>
+        <select id="estado-filtro">
+            <option value="">Todos</option>
+        </select>
+        <label for="buscar-id">ID:</label>
+        <input id="buscar-id" type="search" placeholder="Buscar por ID">
+
+        <p id="estado">Cargando cartas.csv...</p>
+    </section>
+
+    <ul id="papulista">
+
+    </ul>
+
+    <div id="visor" role="dialog" aria-modal="true" aria-label="Vista de carta">
+        <button class="visor-close" type="button" aria-label="Cerrar">&times;</button>
+        <div class="visor-card">
+            <img id="visor-imagen" alt="">
+        </div>
+    </div>
+</body>
+<script>
+    const CONFIG = {
+        imageColumn: 'Image',
+        titleColumn: 'ID',
+        displayColumns: ['Expansión', 'Rareza', 'Estado'],
+        filterColumns: ['Expansión', 'Rareza', 'ID', 'Color', 'Estado']
+    };
+    const papulista = document.querySelector('#papulista');
+    const expansion = document.querySelector('#expansion');
+    const rareza = document.querySelector('#rareza');
+    const estadoFiltro = document.querySelector('#estado-filtro');
+    const buscarId = document.querySelector('#buscar-id');
+    const estado = document.querySelector('#estado');
+    const visor = document.querySelector('#visor');
+    const visorCard = document.querySelector('.visor-card');
+    const visorImagen = document.querySelector('#visor-imagen');
+    const visorCerrar = document.querySelector('.visor-close');
+    let encabezados = [];
+    let cartas = [];
+
+    function parseCsv(texto) {
+        const filas = [];
+        let fila = [];
+        let celda = '';
+        let entreComillas = false;
+        for (let indice = 0; indice < texto.length; indice++) {
+            const caracter = texto[indice];
+            if (caracter === '"' && texto[indice + 1] === '"' && entreComillas) {
+                celda += '"';
+                indice++;
+            } else if (caracter === '"') entreComillas = !entreComillas;
+            else if (caracter === ',' && !entreComillas) {
+                fila.push(celda);
+                celda = '';
+            } else if ((caracter === '\n' || caracter === '\r') && !entreComillas) {
+                if (caracter === '\r' && texto[indice + 1] === '\n') indice++;
+                fila.push(celda);
+                if (fila.some(valor => valor !== '')) filas.push(fila);
+                fila = [];
+                celda = '';
+            } else celda += caracter;
+        }
+        if (celda || fila.length) {
+            fila.push(celda);
+            filas.push(fila);
+        }
+        return filas;
+    }
+
+    function renderizar() {
+        const expansionSeleccionada = expansion.value;
+        const rarezaSeleccionada = rareza.value;
+        const estadoSeleccionado = estadoFiltro.value;
+        const idBuscado = buscarId.value.trim().toLowerCase();
+        const filas = cartas.filter(carta => {
+            const coincideExpansion = !expansionSeleccionada || carta['Expansión'] === expansionSeleccionada;
+            const coincideRareza = !rarezaSeleccionada || carta.Rareza === rarezaSeleccionada;
+            const coincideEstado = !estadoSeleccionado || carta.Estado === estadoSeleccionado;
+            const coincideId = !idBuscado || carta.ID.toLowerCase().includes(idBuscado);
+            return coincideExpansion && coincideRareza && coincideEstado && coincideId;
+        });
+        papulista.replaceChildren();
+        for (const carta of filas) {
+            const card = document.createElement('li');
+            card.className = 'card';
+            const imagen = carta[CONFIG.imageColumn] || carta.Imagen || carta['Ilustración (URL imagen)'];
+            const titulo = carta[CONFIG.titleColumn] || 'Sin ID';
+            const estadoCarta = carta.Estado || 'Ninguno';
+            const estadoClase = estadoCarta.toLowerCase().replace(/[^a-z]+/g, '-');
+            const detalles = CONFIG.displayColumns
+                .filter(columna => encabezados.includes(columna))
+                .map(columna => columna === 'Estado'
+                    ? `<p>${columna}: <span class="estado-badge estado-${estadoClase}">${estadoCarta}</span></p>`
+                    : `<p>${columna}: ${carta[columna] || ''}</p>`)
+                .join('');
+            card.innerHTML = `<div class="card-info">
+                ${imagen ? `<img src="${imagen}" alt="Carta ${titulo}" loading="lazy" decoding="async">` : ''}
+                <h3>${titulo}</h3>
+                ${detalles}
+            </div>`;
+            const imagenElemento = card.querySelector('img');
+            if (imagenElemento) imagenElemento.addEventListener('click', () => abrirVisor(carta, imagen));
+            papulista.appendChild(card);
+        }
+        estado.textContent = `Mostrando ${filas.length} de ${cartas.length} cartas.`;
+    }
+
+    async function cargarCsv() {
+        try {
+            const respuesta = await fetch('cartas.csv');
+            if (!respuesta.ok) throw new Error('No se encontró cartas.csv. Ejecuta npm run preparar-csv.');
+            const filas = parseCsv(await respuesta.text());
+            encabezados = filas.shift() || [];
+            cartas = filas.map(valores => Object.fromEntries(encabezados.map((encabezado, indice) => [encabezado, valores[indice] || ''])));
+            const expansiones = [...new Set(cartas.map(carta => carta['Expansión']).filter(Boolean))].sort();
+            const rarezas = [...new Set(cartas.map(carta => carta.Rareza).filter(Boolean))].sort();
+            const estados = [...new Set(cartas.map(carta => carta.Estado || 'Ninguno').filter(Boolean))].sort();
+            expansion.replaceChildren(new Option('Todas', ''), ...expansiones.map(valor => new Option(valor, valor)));
+            rareza.replaceChildren(new Option('Todas', ''), ...rarezas.map(valor => new Option(valor, valor)));
+            estadoFiltro.replaceChildren(new Option('Todos', ''), ...estados.map(valor => new Option(valor, valor)));
+            expansion.disabled = !CONFIG.filterColumns.includes('Expansión') || !encabezados.includes('Expansión');
+            rareza.disabled = !CONFIG.filterColumns.includes('Rareza') || !encabezados.includes('Rareza');
+            estadoFiltro.disabled = !CONFIG.filterColumns.includes('Estado') || !encabezados.includes('Estado');
+            requestAnimationFrame(renderizar);
+        } catch (error) {
+            estado.textContent = `Error: ${error.message}`;
+        }
+    }
+
+    expansion.addEventListener('change', renderizar);
+    rareza.addEventListener('change', renderizar);
+    estadoFiltro.addEventListener('change', renderizar);
+    buscarId.addEventListener('input', renderizar);
+    cargarCsv();
+
+    function abrirVisor(carta, imagen) {
+        visorImagen.src = imagen;
+        visorImagen.alt = `Carta ${carta[CONFIG.titleColumn] || ''}`;
+        visor.classList.add('abierto');
+    }
+
+    function cerrarVisor() {
+        visor.classList.remove('abierto');
+        visorImagen.removeAttribute('src');
+    }
+
+    visorCerrar.addEventListener('click', cerrarVisor);
+    visor.addEventListener('click', (evento) => {
+        if (evento.target === visor) cerrarVisor();
+    });
+    visorCard.addEventListener('pointermove', (evento) => {
+        const limites = visorCard.getBoundingClientRect();
+        const x = (evento.clientX - limites.left) / limites.width;
+        const y = (evento.clientY - limites.top) / limites.height;
+        visorCard.style.setProperty('--rot-y', `${(x - .5) * 18}deg`);
+        visorCard.style.setProperty('--rot-x', `${(.5 - y) * 18}deg`);
+        visorCard.style.setProperty('--shine-x', `${x * 100}%`);
+        visorCard.style.setProperty('--shine-y', `${y * 100}%`);
+    });
+    visorCard.addEventListener('pointerleave', () => {
+        visorCard.style.setProperty('--rot-x', '0deg');
+        visorCard.style.setProperty('--rot-y', '0deg');
+        visorCard.style.setProperty('--shine-x', '50%');
+        visorCard.style.setProperty('--shine-y', '50%');
+    });
+    document.addEventListener('keydown', (evento) => {
+        if (evento.key === 'Escape') cerrarVisor();
+    });
+    /*
+
+    function abrirVisor(carta, imagen) {
+        visorImagen.src = imagen;
+        visorImagen.alt = `Carta ${carta[CONFIG.titleColumn] || ''}`;
+        visor.classList.add('abierto');
+    }
+    function cerrarVisor() {
+        visor.classList.remove('abierto');
+        visorImagen.removeAttribute('src');
+    }
+
+    function test() {
+        const carta = cartas[0];
+        if (!carta) return;
+        const imagen = carta[CONFIG.imageColumn] || carta.Imagen || carta['Ilustración (URL imagen)'];
+        abrirVisor(carta, imagen);
+    }
+    */
+</script>
+
+</html>
